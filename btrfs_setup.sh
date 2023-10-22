@@ -70,4 +70,16 @@ chmod 600 /mnt/@swap/swapfile
 mkswap /mnt/@swap/swapfile
 swapon /mnt/@swap/swapfile
 
-
+# Check if arch_base.sh script exists
+if [ -f "$(dirname "$0")/arch_base.sh" ]; then
+  read -p "The arch_base script was found in the same directory. Do you want to run it now? (y/n): " RUN_ARCH_BASE
+  if [[ ${RUN_ARCH_BASE,,} == "y" ]]; then
+    bash "$(dirname "$0")/arch_base.sh"
+  else
+    echo "Exiting the script. You can run arch_base.sh manually later."
+    exit 1
+  fi
+else
+  echo "The arch_base.sh script was not found in the same directory. Exiting the script."
+  exit 1
+fi
