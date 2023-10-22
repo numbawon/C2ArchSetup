@@ -53,6 +53,9 @@ read sudo_access
 if [ "$sudo_access" = "yes" ]; then
     pacman -S sudo --noconfirm
     echo "$username ALL=(ALL) ALL" >> /etc/sudoers.d/$username
+    
+    # Switch to the new user and install yay
+    su - $username -c 'git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm'
 fi
 
 # Install bootloader (systemd-boot)
