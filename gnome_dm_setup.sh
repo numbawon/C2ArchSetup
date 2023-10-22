@@ -16,6 +16,30 @@ then
     pacman -S gnome-extra --noconfirm
 fi
 
+echo "Identifying graphics card..."
+gpu_info=$(lspci | grep VGA)
+echo "$gpu_info"
+
+if echo "$gpu_info" | grep -iq "nvidia"
+then
+    echo "NVIDIA graphics card detected."
+    echo "Installing NVIDIA graphics drivers..."
+    pacman -S nvidia nvidia-utils --noconfirm
+elif echo "$gpu_info" | grep -iq "intel"
+then
+    echo "Intel graphics card detected."
+    echo "Installing Intel graphics drivers..."
+    pacman -S mesa xf86-video-intel --noconfirm
+elif echo "$gpu_info" | grep -iq "amd"
+then
+    echo "AMD graphics card detected."
+    echo "Installing AMD graphics drivers..."
+    pacman -S mesa xf86-video-amdgpu --noconfirm
+else
+    echo "Graphics card not recognized. Installing generic vesa driver..."
+    pacman -S xf86-video-vesa --noconfirm
+fi
+
 echo "Listing all users..."
 users=($(awk -F':' '{ print $1}' /etc/passwd))
 for i in "${!users[@]}"; do 
