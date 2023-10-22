@@ -70,13 +70,4 @@ chmod 600 /mnt/@swap/swapfile
 mkswap /mnt/@swap/swapfile
 swapon /mnt/@swap/swapfile
 
-echo "${DRIVE}2  /.snapshots      btrfs   noatime,compress=lzo,space_cache,subvol=@snapshots 0 0" >> /etc/fstab
-echo "${DRIVE}2  /.home           btrfs   noatime,compress=lzo,space_cache,subvol=@home 0 0" >> /etc/fstab
-echo "${DRIVE}2  /.var            btrfs   noatime,compress=lzo,space_cache,subvol=@var 0 0" >> /etc/fstab
-echo "${DRIVE}2  /.tmp            btrfs   noatime,compress=lzo,space_cache,subvol=@tmp 0 0" >> /etc/fstab
-echo "${DRIVE}2  /.srv            btrfs   noatime,compress=lzo,space_cache,subvol=@srv 0 0" >> /etc/fstab
-echo "${DRIVE}2  /.opt            btrfs   noatime,compress=lzo,space_cache,subvol=@opt 0 0" >> /etc/fstab
-echo "${DRIVE}2  /.usr/local      btrfs   noatime,compress=lzo,space_cache,subvol=@usr_local 0 0" >> /etc/fstab
-echo "${DRIVE}1  /boot/           vfat    defaults 0 0" >> /etc/fstab
-echo "/mnt/@swap/swapfile none swap defaults 0 0" >> /etc/fstab
 
