@@ -6,6 +6,9 @@ pacman -Syu --noconfirm
 echo "Installing GNOME..."
 pacman -S gnome --noconfirm
 
+echo "Enabling GDM..."
+systemctl enable gdm.service
+
 echo "The gnome-extra group includes the following packages:"
 pacman -Sg gnome-extra | awk '{print $2}'
 
