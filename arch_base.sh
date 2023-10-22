@@ -30,31 +30,14 @@ if [ "$timezone_answer" != "yes" ]; then
     echo "Please enter your city (e.g., Los_Angeles):"
     read city
     timezone="$region/$city"
+else
+    region=$(echo $timezone | cut -d'/' -f1)
 fi
 ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
 
 # Install and configure reflector to find the fastest mirrors regardless of location
 pacman -S --noconfirm reflector
 reflector --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
-
-# Create a systemd timer to re-check mirrors every 10 days
-echo "[Unit]
-Description=Update mirror list using Reflector
-
-[Timer]
-OnBootSec=15min
-OnUnitActiveSec=10d
-
-[Install]
-WantedBy=timers.target" > /etc/systemd/system/reflector.timer
-
-echo "[Unit]
-Description=Update mirror list using Reflector
-
-[Service]
-ExecStart=/usr/bin/reflector --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist" > /etc/systemd/system/reflector.service
-
-systemctl enable reflector.timer
 
 # Run hwclock to generate /etc/adjtime
 hwclock --systohc
@@ -103,6 +86,48 @@ sed -i "/\[multilib\]/,/Include/"'s/^#//' /mnt/etc/pacman.conf
 sed -i "s/^#Color/Color/" /mnt/etc/pacman.conf
 sed -i "s/^#ParallelDownloads = 5/ParallelDownloads = 10/" /mnt/etc/pacman.conf
 
+# Install NetworkManager and PipeWire, enable NetworkManager to start at boot.
+pacman -S --noconfirm networkmanager pipewire pipewire-alsa pipewire-pulse pipewire-jack 
+systemctl enable NetworkManager 
+
+# Prompt the user for their choice of kernel and install it.
+echo "Please enter your choice of kernel (e.g., linux, linux-lts, linux-hardened, linux-zen):"
+read kernel_choice
+pacman -S --noconfirm $kernel_choice
+
+# Check if Secure Boot is enabled and prepare for self-signed kernel if it is.
+if [ "$(mokutil --sb-state)" == "SecureBoot enabled" ]; then 
+    echo "Secure Boot is enabled on this system."
+    echo "Do you want to prepare this device for a self-signed kernel? (yes/no)"
+    read secure_boot_answer
+    
+    if [ "$secure_boot_answer" = "yes" ]; then 
+        # Install required packages for signing and MOK maintenance.
+        pacman -S sbsigntools efitools openssl mokutil
+        
+        # Generate and self-sign the kernel.
+        openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=My Secure Boot Signing Key/"
+        openssl x509 -in MOK.der -inform DER -outform PEM -out MOK.pem
+        sbsign --key MOK.priv --cert MOK.pem /boot/vmlinuz-$kernel_choice --output /boot/vmlinuz-$kernel_choice.signed
+
+        # Enroll the key.
+        mokutil --import MOK.der
+
+        # Create a pacman hook for the chosen kernel.
+        echo "[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = $kernel_choice
+
+[Action]
+Description = Sign the kernel for secure boot...
+When = PostTransaction
+Exec = /usr/bin/sbsign --key /path/to/MOK.priv --cert /path/to/MOK.pem /boot/vmlinuz-$kernel_choice --output /boot/vmlinuz-$kernel_choice.signed
+Depends = sbsigntools" > /etc/pacman.d/hooks/100-sign-$kernel_choice.hook
+    fi 
+fi 
+
 # Install bootloader (systemd-boot)
 bootctl --path=/boot install
 
@@ -112,9 +137,9 @@ root_device_path=$(df | grep '/$' | awk '{print $1}')
 # Create loader entries for systemd-boot.
 echo "default arch" > /boot/loader/loader.conf
 echo "title Arch Linux" > /boot/loader/entries/arch.conf
-echo "linux /vmlinuz-linux" >> /boot/loader/entries/arch.conf
-echo "initrd  /initramfs-linux.img" >> /boot/loader/entries/arch.conf
-echo "options root=PARTUUID=$(blkid -s PARTUUID -o value $root_device_path) rw" >> /boot/loader/entries/arch.conf
+echo "linux /vmlinuz-$kernel_choice.signed" >> /boot/loader/entries/arch.conf
+echo "initrd  /initramfs-$kernel_choice.img" >> /boot/loader/entries/arch.conf
+echo "options root=PARTUUID=$(blkid -s PARTUUID -o value $root_device_path) rw resume=/@swap/swapfile" >> /boot/loader/entries/arch.conf
 
 # Check for any *_dm_setup.sh scripts in the current directory and prompt the user to run one if any are found.
 setup_scripts=(*_dm_setup.sh)
@@ -139,6 +164,13 @@ if [ ${#setup_scripts[@]} -ne 0 ]; then
     fi 
 fi 
 
-# Exit the chroot environment and reboot.
-exit 
-reboot 
+# Prompt the user if they are ready to reboot
+echo "Are you ready to reboot? (yes/no)"
+read reboot_answer
+if [ "$reboot_answer" = "yes" ]; then 
+    # Exit the chroot environment and reboot.
+    exit 
+    reboot 
+else 
+    echo "Please type 'reboot' when you are ready to reboot the system."
+fi
