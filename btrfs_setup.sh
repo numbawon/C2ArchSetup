@@ -83,3 +83,4 @@ else
   echo "The arch_base.sh script was not found in the same directory. Exiting the script."
   exit 1
 fi
+end
