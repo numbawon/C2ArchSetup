@@ -53,14 +53,14 @@ btrfs subvolume create /mnt/@usr_local
 umount /mnt
 
 # Remount the subvolumes
-mount -o noatime,compress=lzo,space_cache,subvol=@ "${DRIVE}"2 /
-mount -o noatime,compress=lzo,space_cache,subvol=@home "${DRIVE}"2 /home
-mount -o noatime,compress=lzo,space_cache,subvol=@snapshots "${DRIVE}"2 /.snapshots
-mount -o noatime,compress=lzo,space_cache,subvol=@var "${DRIVE}"2 /var
-mount -o noatime,compress=lzo,space_cache,subvol=@tmp "${DRIVE}"2 /tmp
-mount -o noatime,compress=lzo,space_cache,subvol=@srv "${DRIVE}"2 /srv
-mount -o noatime,compress=lzo,space_cache,subvol=@opt "${DRIVE}"2 /opt
-mount -o noatime,compress=lzo,space_cache,subvol=@usr_local "${DRIVE}"2 /usr/local
+mount -o noatime,compress=lzo,space_cache,subvol=@ "${DRIVE}"2 /mnt/
+mount -o noatime,compress=lzo,space_cache,subvol=@home "${DRIVE}"2 /mnt/home
+mount -o noatime,compress=lzo,space_cache,subvol=@snapshots "${DRIVE}"2 /mnt/.snapshots
+mount -o noatime,compress=lzo,space_cache,subvol=@var "${DRIVE}"2 /mnt/var
+mount -o noatime,compress=lzo,space_cache,subvol=@tmp "${DRIVE}"2 /mnt/tmp
+mount -o noatime,compress=lzo,space_cache,subvol=@srv "${DRIVE}"2 /mnt/srv
+mount -o noatime,compress=lzo,space_cache,subvol=@opt "${DRIVE}"2 /mnt/opt
+mount -o noatime,compress=lzo,space_cache,subvol=@usr_local "${DRIVE}"2 /mnt/usr/local
 
 # Mount the boot partition to /boot/efi (required for UEFI)
 mkdir -p /boot/
