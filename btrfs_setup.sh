@@ -1,10 +1,10 @@
-#!/bin/bash
+  #!/bin/bash
 
 # Get a list of drives
 DRIVES=$(lsblk -dpno NAME,SIZE | grep -v "boot\|rpmb\|loop\|sr0" | awk '{print $1}')
 
 # Convert the list into an array
-DRIVES=("$DRIVES")
+IFS=$'\n' read -rd '' -a DRIVES <<<"$DRIVES"
 
 # Print the list to the user
 echo "Available drives:"
@@ -13,7 +13,7 @@ for i in "${!DRIVES[@]}"; do
 done
 
 # Prompt user for drive to use
-read -rp "Enter the number of the drive you want to use: " DRIVE_NUM
+read -rp "Enter the number of the drive you want to use: " DRIVE_NUM </dev/tty
 
 # Get the selected drive
 DRIVE=${DRIVES[$((DRIVE_NUM-1))]}
@@ -28,7 +28,7 @@ parted -s "${DRIVE}" mklabel gpt
 parted -s "${DRIVE}" mkpart primary fat32 2048s 500M
 
 # Create a Btrfs partition with the remaining space
-parted -s "${DRIVE}" mkpart primary btrfs 500M -1
+parted -s "${DRIVE}" mkpart primary btrfs 500M 100%
 
 # Format the boot partition with FAT32
 mkfs.fat -F32 "${DRIVE}"1
