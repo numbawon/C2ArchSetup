@@ -31,10 +31,10 @@ parted -s "${DRIVE}" mkpart primary fat32 2048s 500M
 parted -s "${DRIVE}" mkpart primary btrfs 500M 100%
 
 # Format the boot partition with FAT32
-mkfs.fat -F32 "${DRIVE}"1
+mkfs.fat -F32 "${DRIVE}"1 -f
 
 # Format the main partition with BTRFS
-mkfs.btrfs "${DRIVE}"2
+mkfs.btrfs "${DRIVE}"2 -f
 
 # Mount the main partition
 mount "${DRIVE}"2 /mnt
