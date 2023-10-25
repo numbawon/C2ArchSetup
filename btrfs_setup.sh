@@ -21,8 +21,14 @@ DRIVE=${DRIVES[$((DRIVE_NUM-1))]}
 # Unmount the device if it's already mounted
 umount "${DRIVE}"*
 
-# Create partitions
-echo -e "o\nn\np\n1\n\n+500M\nt\nc\nn\np\n2\n\n\nw" | fdisk "${DRIVE}"
+# Create a new partition table on the device
+parted -s "${DRIVE}" mklabel gpt
+
+# Create a 500MB FAT32 partition
+parted -s "${DRIVE}" mkpart primary fat32 2048s 500M
+
+# Create a Btrfs partition with the remaining space
+parted -s "${DRIVE}" mkpart primary btrfs 500M -1
 
 # Format the boot partition with FAT32
 mkfs.fat -F32 "${DRIVE}"1
