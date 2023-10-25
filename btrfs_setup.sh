@@ -63,8 +63,8 @@ mount -o noatime,compress=lzo,space_cache,subvol=@opt "${DRIVE}"2 /mnt/opt
 mount -o noatime,compress=lzo,space_cache,subvol=@usr_local "${DRIVE}"2 /mnt/usr/local
 
 # Mount the boot partition to /boot/efi (required for UEFI)
-mkdir -p /boot/
-mount "${DRIVE}"1 /boot/
+mkdir -p /mnt/boot/
+mount "${DRIVE}"1 /mnt/boot/
 
 # Create a swapfile
 btrfs subvolume create /mnt/@swap
